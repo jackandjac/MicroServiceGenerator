@@ -72,4 +72,13 @@ public class FolderStructureGenerator {
         out.flush();
         fin.close();
 	 }
+	 
+	public static void packageGen(String pname, File cur) {
+		     String[] res=pname.split("\\.");
+		     String path=cur.getAbsolutePath();
+		     for(int i=0;i<res.length;i++) {
+		        path=path+File.separator+res[i];
+		     }
+		     new File(path).mkdirs();
+		}
 }
