@@ -39,6 +39,13 @@ public class GenericMetaDataController {
 		list.add(entityClassGenerator.genEntityClassHeader("CommVal", "COMM_VAL"));
 		return list;
 	}
+	@GetMapping(path = "/isolver/testclass/{className}")
+	public String testClassGeneration(@PathVariable String className) {
+		ClassEntry ce=entityClassGenerator.retrieveClassInfo(PACKAGE_NAME + "."+className);
+		String content = entityClassGenerator.genClass(ce);
+		System.out.println(content);
+		return content;
+	}
 
 
 }
