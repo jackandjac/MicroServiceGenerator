@@ -64,7 +64,7 @@ public class EntityClassGenerator {
 				String name = fl.getName();
 				String type = fl.getType().getName();
 				Column column = fl.getAnnotation( Column.class);
-				String columnName=null;
+				String columnName="";
 				int precision=0;
 				int scale=0;
 				String table="";
@@ -115,9 +115,14 @@ public class EntityClassGenerator {
                 entry.setPrecision(precision);
                 entry.setTable(table);
                 entry.setUnique(unique);
+                if(isId ||isEmid ) {
+                	classEntry.setIdType(entry.getType());
+                	classEntry.setIdName(name);
+                }
                 
                 
 				if(isEmid) {
+					classEntry.setHasEmbedabble(true);
 					entry.setEmbeddedContent(this.retrieveClassInfo(type));
 				}
 			
@@ -154,19 +159,18 @@ public class EntityClassGenerator {
 	public String genEmbeddableClassHeader(String className) {
 		StringBuffer header =new StringBuffer("");
 		header.append(this.genPackageInfo());
-		header.append('\r').append('\n');
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header,2);
+
 		
 		header.append(this.genImportLib());
-		header.append('\r').append('\n');
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header,2);
+
 		
 		header.append(EMBEDDABLE_TAG).append('\r').append('\n');
-		header.append(genGenericClassHeader(this.genSimpleClassType(className)));
+		header.append(genGenericClassHeader(CGUtil.genSimpleClassType(className)));
 		header.append(SUID_TEMPLATE).append('\r').append('\n');
-        header.append('\r').append('\n');
-        header.append('\r').append('\n');
-        header.append('\r').append('\n');
+        CGUtil.addLineBreak(header,3);
+
         return header.toString();
 		
 	}
@@ -181,9 +185,9 @@ public class EntityClassGenerator {
 		}else {
 		   cd.append(this.genEntityClassHeader(ce.getClassName(), ce.getTableName()));
 		}
-		   cd.append('\r').append('\n');
+		   CGUtil.addLineBreak(cd);
 		   cd.append(this.genClassBody(ce.getRecords()));
-		   cd.append('\r').append('\n');
+		   CGUtil.addLineBreak(cd);
 		   cd.append(this.end());
 		   return cd.toString();
 	}
@@ -192,17 +196,17 @@ public class EntityClassGenerator {
 		
 		for(int i =0 ;i< entries.size();i++) {
 			body.append(this.genField(entries.get(i)));
-			body.append('\r').append('\n');
+			CGUtil.addLineBreak(body);
 		}
 		
 		
 		for(int i =0 ;i< entries.size();i++) {
 			body.append(this.genGetter(entries.get(i)));
-			body.append('\r').append('\n');
-			body.append('\r').append('\n');
+			CGUtil.addLineBreak(body, 2);
+
 			body.append(this.genSetter(entries.get(i)));
-			body.append('\r').append('\n');
-			body.append('\r').append('\n');
+			CGUtil.addLineBreak(body,2);
+			
 		}
 		
 		
@@ -222,15 +226,16 @@ public class EntityClassGenerator {
 		}else {
 			field.append(this.genColumnTag(entry));
 		}
-		field.append('\r').append('\n');
-		String simpleType =this.genSimpleClassType( entry.getType());
+	
+		CGUtil.addLineBreak(field);
+		String simpleType =CGUtil.genSimpleClassType( entry.getType());
 		field.append("private ").append(simpleType).append(" ").append(entry.getName()).append(";");
-		field.append('\r').append('\n');
+		CGUtil.addLineBreak(field);
 		
 		return field.toString();
 	}
 	
-	private String genSimpleClassType(String type) {
+	public String genSimpleClassType(String type) {
 		int idx = type.lastIndexOf(".");
 		return type.substring(idx+1);
 	}
@@ -243,10 +248,10 @@ public class EntityClassGenerator {
     	StringBuffer getter=new StringBuffer("");
     	String fieldName =entry.getName();
     	String gmethod ="get" +fieldName.substring(0,1).toUpperCase() + fieldName.substring(1)+"(){";
-    	String simpleType = this.genSimpleClassType(entry.getType());
+    	String simpleType = CGUtil.genSimpleClassType(entry.getType());
     	getter.append("public ").append(simpleType).append(" ").append(gmethod).append('\r').append('\n');
     	getter.append("    ").append("return this.").append(fieldName).append(";");
-        getter.append('\r').append('\n');
+    	CGUtil.addLineBreak(getter);
         getter.append("}");
         
     	return getter.toString();
@@ -255,7 +260,7 @@ public class EntityClassGenerator {
     	StringBuffer setter=new StringBuffer("");
     	String fieldName =entry.getName();
     	
-    	String simpleType = this.genSimpleClassType(entry.getType());
+    	String simpleType = CGUtil.genSimpleClassType(entry.getType());
     	String smethod ="set" +fieldName.substring(0,1).toUpperCase() + fieldName.substring(1)+"("+simpleType+" "+fieldName +"){";
     	setter.append("public void").append(" ").append(smethod).append('\r').append('\n');
     	setter.append("    ").append("this.").append(fieldName).append("=").append(fieldName).append(";");
@@ -265,9 +270,8 @@ public class EntityClassGenerator {
     	return setter.toString();
     }	
 	private String genColumnTag(RecordEntry entry) {
-		 StringBuffer db =new StringBuffer("@Column(name=");
-		 db.append("\"").append(entry.getColname()).append("\", ");
-		 
+		 StringBuffer db =new StringBuffer("@Column("); 
+		 String name=entry.getColname();   // default is "";
 		 boolean unique =entry.isUnique();  // default is false
 		 boolean nullable= entry.isNullable(); // default is true
 		 boolean insertable= entry.isInsertable();// default is true
@@ -277,7 +281,9 @@ public class EntityClassGenerator {
 		 int length= entry.getLength();// default is 255
 		 int precision= entry.getPrecision();// default is 0
 		 int scale= entry.getScale();// default is 0
-		 
+		 if(!name.isEmpty()) {
+			 db.append("name=\"").append(entry.getColname()).append("\", ");
+		 }
 		 if(unique) {
 			 db.append("unique=").append(entry.isUnique()).append(", ");
 		 }
@@ -329,29 +335,28 @@ public class EntityClassGenerator {
 		StringBuffer header = new StringBuffer("");
 		
 		header.append(this.genPackageInfo());
-		header.append('\r').append('\n');
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header,2);
+
 		
 		header.append(this.genImportLib());
-		header.append('\r').append('\n');
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header,2);
+
 		
 		header.append(ENTITY_TAG);
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header);
 		
 		header.append(this.genTableTag(tableName));
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header);
 		
-		header.append(this.genNamedQueryTag(this.genSimpleClassType(className)));
-		header.append('\r').append('\n');
+		header.append(this.genNamedQueryTag(CGUtil.genSimpleClassType(className)));
+		CGUtil.addLineBreak(header);
 		
-		header.append(this.genGenericClassHeader(this.genSimpleClassType(className)));
-		header.append('\r').append('\n');
+		header.append(this.genGenericClassHeader(CGUtil.genSimpleClassType(className)));
+		CGUtil.addLineBreak(header);
 		
 		header.append(SUID_TEMPLATE).append('\r').append('\n');
-		header.append('\r').append('\n');
-		header.append('\r').append('\n');
-		header.append('\r').append('\n');
+		CGUtil.addLineBreak(header,3);
+
         return header.toString();
 		
 

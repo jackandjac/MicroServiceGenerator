@@ -9,26 +9,47 @@ public class ClassEntry {
 	private String className;
 	private String TableName;
 	private String packageName;
+	private String idType;
+	private String idName;
 	private boolean entity;
 	private boolean embeddable;
+	private boolean hasEmbedabble;
 	private List<RecordEntry> records;
-	
-	
 	
 	public ClassEntry() {
 
 	}
 	
-	public ClassEntry(String className, String tableName, String packageName, boolean entity, boolean embeddable,
-			List<RecordEntry> records) {
+	public ClassEntry(String className, String tableName, String packageName, String idType, String idName,
+			boolean entity, boolean embeddable, boolean hasEmbedabble, List<RecordEntry> records) {
 		super();
 		this.className = className;
 		TableName = tableName;
 		this.packageName = packageName;
+		this.idType = idType;
+		this.idName = idName;
 		this.entity = entity;
 		this.embeddable = embeddable;
+		this.hasEmbedabble = hasEmbedabble;
 		this.records = records;
 	}
+
+	public boolean isHasEmbedabble() {
+		return hasEmbedabble;
+	}
+	public void setHasEmbedabble(boolean hasEmbedabble) {
+		this.hasEmbedabble = hasEmbedabble;
+	}
+
+	public String getIdName() {
+		return idName;
+	}
+
+	public void setIdName(String idName) {
+		this.idName = idName;
+	}
+
+
 	public String getPackageName() {
 		return packageName;
 	}
@@ -64,6 +85,16 @@ public class ClassEntry {
 	}
 	public void setRecords(List<RecordEntry> records) {
 		this.records = records;
+	}
+
+
+	public String getIdType() {
+		return idType;
+	}
+
+
+	public void setIdType(String idType) {
+		this.idType = idType;
 	}
 	
 
